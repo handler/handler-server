@@ -1,31 +1,43 @@
 import * as express from 'express';
+import { FunctionHandler, FunctionRequest, FunctionRouter,
+         HTTPContext, HTTPContextOptions, HTTPHandler, HTTPRouter } from 'handler.js';
 
-import { FunctionContext, FunctionHandler, FunctionResponse, FunctionRouter,
-         HTTPContext, HTTPHandler, HTTPResponse, HTTPRouter } from 'handlr';
-
-function _sendHTTPResponse(res: express.Response, handlerRes: HTTPResponse) {
-  res
-    .contentType(handlerRes.contentType)
-    .status(handlerRes.statusCode)
-    .send(handlerRes.body);
+function _sendResponse(res: express.Response, ctx: HTTPContext) {
+  for (const field of Object.keys(ctx.res.headers)) {
+    res.header(field, ctx.res.headers[field] as any);
+  }
+  if (ctx.res.status) {
+    res.status(ctx.res.status);
+  }
+  if (ctx.res.type) {
+    res.type(ctx.res.type);
+  }
+  if (ctx.res.body) {
+    res.send(ctx.res.body);
+  } else if (ctx.res.status) {
+    res.sendStatus(ctx.res.status);
+  } else {
+    throw new Error('missing response');
+  }
 }
 
 export function middlewareFromFunctionRouter(router: FunctionRouter): express.Handler {
   return async(req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-      const ctx = new FunctionContext({
+      const hReq = new FunctionRequest({
         body: req.body,
+        path: req.path,
       });
       for (const middleware of router.middlewares) {
-        const handlerRes = await (middleware as FunctionHandler)(ctx);
-        res.json(handlerRes);
+        const hRes = await (middleware as FunctionHandler)(hReq);
+        return res.json(hRes);
       }
-      const match = router.matchRoute(req.path);
+      const match = router.matchRoute(hReq.path);
       if (!match) {
         return next();
       }
-      const handlerRes = await match.handler(ctx);
-      res.json(handlerRes);
+      const hRes = await match.handler(hReq);
+      res.json(hRes);
     } catch (err) {
       next(err);
     }
@@ -34,26 +46,35 @@ export function middlewareFromFunctionRouter(router: FunctionRouter): express.Ha
 
 export function middlewareFromHTTPRouter(router: HTTPRouter): express.Handler {
   return async(req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const rewritePath = router._rewritePath(req.path);
+    if (rewritePath) {
+      return res.redirect(302, rewritePath);
+    }
     try {
-      const ctx = new HTTPContext({
-        req: {
-          body: req.body,
-          headers: req.headers,
-          method: req.method,
-          query: req.query,
-        },
-      });
+      const options: HTTPContextOptions = {
+        body: req.body,
+        headers: req.headers,
+        method: req.method,
+        path: req.path,
+        query: req.query,
+      };
+      let ctx = new HTTPContext(options);
       for (const middleware of router.middlewares) {
-        const handlerRes = await (middleware as HTTPHandler)(ctx);
-        return _sendHTTPResponse(res, handlerRes);
+        await (middleware as HTTPHandler)(ctx, (err: Error) => {
+          if (err) {
+            throw err;
+          }
+        });
       }
       const match = router.matchRoute(req.method, req.path);
+      console.log(req.method, req.path);
       if (!match) {
-        return next();
+        return res.sendStatus(404);
       }
-      ctx.req.params = match.params;
-      const handlerRes = await match.handler(ctx);
-      return _sendHTTPResponse(res, handlerRes);
+      options.params = match.params;
+      ctx = new HTTPContext(options);
+      await match.handler(ctx);
+      _sendResponse(res, ctx);
     } catch (err) {
       next(err);
     }

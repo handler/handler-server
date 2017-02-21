@@ -1,2 +1,2 @@
-export * from './Server';
+export * from './server';
 export * from './wrap';

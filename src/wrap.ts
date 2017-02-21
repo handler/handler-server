@@ -1,7 +1,7 @@
-import { FunctionHandler, FunctionRouter, HTTPHandler, HTTPRouter } from 'handlr';
+import { FunctionHandler, FunctionRouter, HTTPHandler, HTTPRouter } from 'handler.js';
 
 import { middlewareFromFunctionRouter, middlewareFromHTTPRouter } from './middleware';
-import { Server } from './Server';
+import { Server } from './server';
 
 export function fromFunctionHandler(handler: FunctionHandler): Server {
   const router = new FunctionRouter();
