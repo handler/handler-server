@@ -2,7 +2,6 @@ import * as http from 'http';
 
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
-import { Router } from 'handler.js';
 
 const _app = new WeakMap<Server, express.Application>();
 const _server = new WeakMap<Server, http.Server>();

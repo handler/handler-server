@@ -22,7 +22,7 @@ function _sendResponse(res: express.Response, ctx: HTTPContext) {
 }
 
 export function middlewareFromFunctionRouter(router: FunctionRouter): express.Handler {
-  return async(req: express.Request, res: express.Response, next: express.NextFunction) => {
+  return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
       const hReq = new FunctionRequest({
         body: req.body,
@@ -45,7 +45,7 @@ export function middlewareFromFunctionRouter(router: FunctionRouter): express.Ha
 }
 
 export function middlewareFromHTTPRouter(router: HTTPRouter): express.Handler {
-  return async(req: express.Request, res: express.Response, next: express.NextFunction) => {
+  return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const rewritePath = router._rewritePath(req.path);
     if (rewritePath) {
       return res.redirect(302, rewritePath);
