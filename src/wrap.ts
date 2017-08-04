@@ -1,26 +1,26 @@
-import { FunctionHandler, FunctionRouter, HTTPHandler, HTTPRouter } from 'handler.js';
+import { FunctionApplication, FunctionHandler, HTTPApplication, HTTPHandler } from 'handler.js';
 
-import { middlewareFromFunctionRouter, middlewareFromHTTPRouter } from './middleware';
+import { middlewareFromFunctionApplication, middlewareFromHTTPApplication } from './middleware';
 import { Server } from './server';
 
-export function fromFunctionHandler(handler: FunctionHandler): Server {
-  const router = new FunctionRouter();
-  router.all('*', handler);
-  return fromFunctionRouter(router);
+export function fromFunctionApplication(app: FunctionApplication): Server {
+  const middleware = middlewareFromFunctionApplication(app);
+  return new Server(middleware);
 }
 
-export function fromFunctionRouter(router: FunctionRouter): Server {
-  const middleware = middlewareFromFunctionRouter(router);
+export function fromFunctionHandler(handler: FunctionHandler): Server {
+  const app = new FunctionApplication();
+  app.all('*', handler);
+  return fromFunctionApplication(app);
+}
+
+export function fromHTTPApplication(app: HTTPApplication): Server {
+  const middleware = middlewareFromHTTPApplication(app);
   return new Server(middleware);
 }
 
 export function fromHTTPHandler(handler: HTTPHandler): Server {
-  const router = new HTTPRouter();
-  router.all('*', handler);
-  return fromHTTPRouter(router);
-}
-
-export function fromHTTPRouter(router: HTTPRouter): Server {
-  const middleware = middlewareFromHTTPRouter(router);
-  return new Server(middleware);
+  const app = new HTTPApplication();
+  app.all('*', handler);
+  return fromHTTPApplication(app);
 }
