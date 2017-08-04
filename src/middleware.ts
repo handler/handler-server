@@ -4,11 +4,11 @@ import { FunctionApplication, HTTPApplication } from 'handler.js';
 export function middlewareFromFunctionApplication(app: FunctionApplication): Handler {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const hRes = await app.run({
+      const result = await app.run({
         body: req.body,
         path: req.path,
       });
-      res.json(hRes);
+      res.json(result);
     } catch (err) {
       next(err);
     }
@@ -39,7 +39,7 @@ export function middlewareFromHTTPApplication(app: HTTPApplication): Handler {
       } else if (ctx.res.status) {
         res.sendStatus(ctx.res.status);
       } else {
-        next(new Error('missing response'));
+        next();
       }
     } catch (err) {
       next(err);

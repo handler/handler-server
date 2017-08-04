@@ -7,7 +7,7 @@ const _app = new WeakMap<Server, express.Application>();
 const _server = new WeakMap<Server, http.Server>();
 
 export class Server {
-  constructor(protected handler: express.Handler) {
+  constructor(handler: express.Handler) {
     const app = express();
     app.use(bodyParser.json());
     app.use(handler);

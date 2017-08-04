@@ -1,7 +1,7 @@
 {
   "name": "handler-server",
   "description": "Handler.js for Express server",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "author": {
     "name": "Pilwon Huh",
